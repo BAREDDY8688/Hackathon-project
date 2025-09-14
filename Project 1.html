@@ -1,0 +1,853 @@
+ <!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Multi-Role Admin Dashboard SPA Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+  :root {
+    --bg:linear-gradient(#a619f8,#00f2fe);
+    --radius: 16px;
+    --transition: 0.3s ease;
+    --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --btn-padding: 10px 20px;
+    --shadow-light: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  body, html {
+      
+    margin: 0; padding: 0; height: 100%;
+    font-family: var(--font-family);
+    overflow-x:hidden;
+  }
+  button, input, select {
+    font-family: var(--font-family);
+    font-size: 14px;
+    outline: none;
+  }
+  #app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.8s ease;
+    overflow-x: hidden;
+  }
+
+
+
+  /* Backgrounds */
+  #app.admin-bg {
+    background: linear-gradient(#005fea,#00c2fa);
+    color: #e5ecf9;
+    position: relative;
+  }
+  #app.admin-bg::before {
+    content: "";
+    position: absolute; top: -30%; left: -40%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(177, 140, 40, 0.07) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  #app.faculty-bg {
+    background: linear-gradient(#a619f8,#00f2fe);
+    color: #e6f2eb;
+    position: relative;
+  }
+  #app.faculty-bg::before {
+    content: "";
+    position: absolute; top: -30%; right: -40%;
+    width: 200%; height: 200%;
+    background: radial-gradient(circle, rgba(255 255 255 / 0.08) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  #app.student-bg {
+    background: linear-gradient(#0e2d6c,#9db2dc);
+    color: #f3eafa;
+    position: relative;
+  }
+  #app.student-bg::before {
+    content: "";
+    position: absolute; bottom: -30%; right: -30%;
+    width: 180%; height: 180%;
+    background: radial-gradient(circle, rgba(255 255 255 / 0.07) 0%, transparent 70%);
+    pointer-events:none;
+  }
+
+
+
+
+
+
+  /* General */
+  h1,h2,h3,h4,h5,h6 { margin: 0 0 12px 0; font-weight: 600; }
+  p { margin: 6px 0 14px 0; }
+  small { font-size: 12px; opacity: 0.75; }
+  .hidden { display: none !important; }
+  .content {
+    max-width: 980px;
+    margin: auto;
+    padding: 2rem 1rem;
+    position: relative;
+  }
+  .card {
+    background: rgba(255 255 255 / 0.15);
+    backdrop-filter: blur(16px);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-light);
+    padding: 24px 28px;
+    max-width: 700px;
+    margin: auto;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  label {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  input[type=text], input[type=password], input[type=email], input[type=number], select {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  input[type=text]:focus, input[type=password]:focus, input[type=email]:focus, input[type=number]:focus, select:focus {
+    outline: 2px solid #3d83f7;
+  }
+  button {
+    border: none;
+    border-radius: 12px;
+    background: #3166f2;
+    color: white;
+    cursor: pointer;
+    padding: var(--btn-padding);
+    font-weight: 700;
+    transition: background 0.3s ease;
+  }
+  button:hover:not(:disabled) {
+    background: #2a52bf;
+  }
+  button:disabled {
+    background: #a4b9ff;
+    cursor: not-allowed;
+  }
+  .btn-outlined {
+    background: transparent;
+    border: 2px solid white;
+    font-weight: 500;
+    color: white;
+  }
+  .btn-outlined:hover {
+    background: rgba(255 255 255 / 0.15);
+  }
+  input[readonly] {
+    background: #ddd;
+  }
+  .error-text {
+    color: #ff3860;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  nav {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  nav button {
+    background: rgba(255 255 255 / 0.2);
+    border-radius: 14px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-weight: 600;
+    color: inherit;
+    transition: background 0.3s ease;
+  }
+  nav button.active {
+    background: white;
+    color: #3166f2;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    background: rgba(255 255 255 / 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  thead tr {
+    background: rgba(255 255 255 / 0.5);
+  }
+  thead th, tbody td {
+    text-align: left;
+    padding: 14px 12px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  tbody tr:nth-child(even) {
+    background: rgba(255 255 255 / 0.15);
+  }
+  tbody td > small {
+    color: rgba(0,0,0,0.35);
+    font-weight: 400;
+  }
+  .sidebar {
+    width: 220px;
+    background: rgba(255 255 255 / 0.15);
+    backdrop-filter: blur(16px);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-light);
+    height: calc(100vh - 56px);
+    padding: 12px 20px 20px 20px;
+    margin: auto 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .sidebar a {
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 12px 0;
+    cursor: pointer;
+    border-radius: 10px;
+    padding-left: 16px;
+    transition: background 0.2s ease;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    background: white;
+    color: var(--btn-color,#3166f2);
+  }
+  .dash-container {
+    display: flex;
+    gap: 24px;
+  }
+  .dash-main {
+    flex: 1;
+  }
+  .header-dash {
+    text-align: right;
+    margin-bottom: 10px;
+  }
+  .header-dash button {
+    background: transparent;
+    color: white;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 12px;
+    border: 2px solid white;
+    cursor: pointer;
+    margin-left: 12px;
+  }
+  .header-dash button:hover {
+    background: white;
+    color: var(--btn-color,#3166f2);
+  }
+  .scroll-container {
+    overflow-x: auto;
+  }
+  select.minor-course-select {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+  .mfa-container {
+    margin-top: 12px;
+  }
+  @media (max-width: 900px) {
+    .dash-container { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      flex-direction: row;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    .sidebar a {
+      flex: 1 1 120px;
+      padding: 10px 8px;
+      text-align: center;
+      border-radius: 16px;
+    }
+  }
+</style>
+</head>
+<body  >
+<div id="app" class="admin-bg" aria-live="polite">
+
+  <!-- Role Selection -->
+  <section id="role-select" class="content card" role="region" aria-label="Role selection">
+    <h1 style="text-align:center;">WELCOME</h1>
+    <p style="text-align:center;">Select your login role to continue</p>
+    <nav aria-label="Role selection navigation">
+      <button id="btn-admin">Admin Login</button>
+      <button id="btn-faculty">Faculty Login</button>
+      <button id="btn-student">Student Login</button>
+    </nav>
+  </section>
+
+  <!-- Admin Login -->
+  <section id="admin-login" class="content card hidden" role="region" aria-label="Admin login">
+    <h2>Admin Login</h2>
+    <form id="admin-login-form" autocomplete="off" aria-describedby="admin-login-error">
+      <label for="admin-username">Username</label>
+      <input type="text" id="admin-username" name="username" placeholder="admin" required />
+      <label for="admin-password">Password</label>
+      <input type="password" id="admin-password" name="password" placeholder="admin123" required />
+      <button type="submit">Log In</button>
+      <p id="admin-login-error" class="error-text" role="alert" aria-live="assertive"></p>
+    </form>
+    <form id="admin-mfa-form" class="mfa-container hidden" autocomplete="off" aria-describedby="admin-mfa-error">
+      <label for="admin-otp">Enter OTP (Demo: 123456)</label>
+      <input type="text" id="admin-otp" maxlength="6" required autocomplete="one-time-code"/>
+      <button type="submit">Verify OTP</button>
+      <p id="admin-mfa-error" class="error-text" role="alert" aria-live="assertive"></p>
+    </form>
+    <button type="button" id="admin-back-btn" class="btn-outlined" aria-label="Back to role selection">Back</button>
+  </section>
+
+  <!-- Faculty Login -->
+  <section id="faculty-login" class="content card hidden" role="region" aria-label="Faculty login">
+    <h2>Faculty Login</h2>
+    <form id="faculty-login-form" autocomplete="off" aria-describedby="faculty-login-error">
+      <label for="faculty-username">Username</label>
+      <input type="text" id="faculty-username" name="username" placeholder="faculty1" required />
+      <label for="faculty-password">Password</label>
+      <input type="password" id="faculty-password" name="password" placeholder="facpass1" required />
+      <button type="submit">Log In</button>
+      <p id="faculty-login-error" class="error-text" role="alert" aria-live="assertive"></p>
+    </form>
+    <form id="faculty-mfa-form" class="mfa-container hidden" autocomplete="off" aria-describedby="faculty-mfa-error">
+      <label for="faculty-otp">Enter OTP (Demo: 654321)</label>
+      <input type="text" id="faculty-otp" maxlength="6" required autocomplete="one-time-code" />
+      <button type="submit">Verify OTP</button>
+      <p id="faculty-mfa-error" class="error-text" role="alert" aria-live="assertive"></p>
+    </form>
+    <button type="button" id="faculty-back-btn" class="btn-outlined" aria-label="Back to role selection">Back</button>
+  </section>
+
+  <!-- Student Login -->
+  <section id="student-login" class="content card hidden" role="region" aria-label="Student login">
+    <h2>Student Login</h2>
+    <form id="student-login-form" autocomplete="off" aria-describedby="student-login-error">
+      <label for="student-username">Username</label>
+      <input type="text" id="student-username" name="username" placeholder="student1" required />
+      <label for="student-password">Password</label>
+      <input type="password" id="student-password" name="password" placeholder="studpass1" required />
+      <button type="submit">Log In</button>
+      <p id="student-login-error" class="error-text" role="alert" aria-live="assertive"></p>
+    </form>
+    <form id="student-mfa-form" class="mfa-container hidden" autocomplete="off" aria-describedby="student-mfa-error">
+      <label for="student-otp">Enter OTP (Demo: 112233)</label>
+      <input type="text" id="student-otp" maxlength="6" required autocomplete="one-time-code" />
+      <button type="submit">Verify OTP</button>
+      <p id="student-mfa-error" class="error-text" role="alert" aria-live="assertive"></p>
+    </form>
+    <button type="button" id="student-back-btn" class="btn-outlined" aria-label="Back to role selection">Back</button>
+  </section>
+
+  <!-- Dashboards Container -->
+  <div id="dashboards" class="content hidden">
+    <div class="header-dash">
+      <button id="logoutBtn" aria-label="Logout from dashboard">Logout</button>
+      <button id="downloadDataBtn" aria-label="Download all submitted data as JSON">Download All Data JSON</button>
+    </div>
+    <div class="dash-container">
+
+      <!-- Sidebar -->
+      <nav class="sidebar" role="navigation" aria-label="Dashboard navigation">
+        <!-- Links populated dynamically -->
+      </nav>
+
+      <!-- Main content -->
+      <div class="dash-main" tabindex="0">
+
+        <!-- Admin dashboard tabs -->
+        <div id="classroom" class="tab hidden">
+          <div class="card">
+            <h3>Classroom Form</h3>
+            <form id="classroomForm">
+              <div class="form-row">
+                <div>
+                  <label>Room Number</label>
+                  <input name="room" required placeholder="e.g., C-102" />
+                </div>
+                <br>
+                <div>
+                  <label>Capacity</label>
+                  <input name="capacity" type="number" min="1" required placeholder="e.g., 60" />
+                </div>
+              </div>
+              <br>
+              <div>
+                <label>Facilities (comma separated)</label>
+                <input name="facilities" placeholder="Projector, AC, Whiteboard" />
+              </div>
+              <br>
+              <div style="display:flex; gap:8px;">
+                <button class="btn" type="submit">Submit Classroom</button>
+                <button class="btn secondary" type="button" onclick="document.getElementById('classroomForm').reset()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="courses" class="tab hidden">
+          <div class="card">
+            <h3>Courses Form</h3>
+            <form id="coursesForm">
+              <div class="form-row">
+                <div>
+                  <label>Course Name</label>
+                  <input name="courseName" required placeholder="e.g., Data Structures" />
+                </div>
+                <br>
+                <div>
+                  <label>Course Code</label>
+                  <input name="courseCode" required placeholder="e.g., CS201" />
+                </div>
+              </div>
+              <br>
+              <div class="form-row">
+                <div>
+                  <label>Credits</label>
+                  <input name="credits" type="number" min="0" required placeholder="e.g., 3" />
+                </div>
+                <br>
+                <div>
+                  <label>Instructor</label>
+                  <input name="instructor" placeholder="Faculty name" />
+                </div>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn" type="submit">Submit Course</button>
+                <button class="btn secondary" type="button" onclick="document.getElementById('coursesForm').reset()">Reset</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div id="timetable" class="tab hidden">
+          <div >      <!--class="card"-->
+            <h3>Weekly Timetable</h3>
+            <p class="small">Demo timetable</p>
+            <table border="1" cellpadding="8" cellspacing="0" style="border-collapse:collapse; width:100%; text-align:center;">
+              <thead style="background:#4617ec;">
+                <tr>
+                  <th>Day</th>
+                  <th>Slot1 (7:30–8:30AM)</th>
+                  <th>Slot2 (8:30–9:30AM)</th>
+                  <th>Slot3 (4:30–5:30PM)</th>
+                </tr>
+              </thead>
+              <tbody id="timetableBody" style="color:rgb(244, 246, 247)">
+                <tr><td>Monday</td><td>PYTHON</td><td>AI</td><td>CLOUD COMPUTING</td></tr>
+                <tr><td>Tuesday</td><td>-</td><td>CYBER SECURITY</td><td>PYTHON</td></tr>
+                <tr><td>Wednesday</td><td>AI</td><td>CLOUD COMPUTING</td><td>-</td></tr>
+                <tr><td>Thursday</td><td>CYBER SECURITY</td><td>PYTHON</td><td>CLOUD COMPUTING</td></tr>
+                <tr><td>Friday</td><td>-</td><td>CYBER SECURITY</td><td>Project Work</td></tr>
+                <tr><td>Saturday</td><td>AI</td><td>-</td><td>Project Work</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Faculty dashboard -->
+        <div id="faculty" class="tab hidden">
+          <div class="card">
+            <h3>Faculty Registration</h3>
+            <form id="facultyForm">
+              <div class="form-row">
+                <div>
+                  <label>Name</label>
+                  <input name="name" type="text" placeholder="Full name" required />
+                </div>
+                <br>
+                <div>
+                  <label>Available Slots</label>
+                  <input name="availableSlots" type="text" placeholder="e.g., slot1, slot2, slot3" required />
+                </div>
+
+              </div><br>
+              <div class="form-row">
+                <div>
+                  <label>Department</label>
+                  <input name="department" type="text" placeholder="Computer Science" required />
+                </div><br>
+                <div>
+                  <label>Email</label>
+                  <input name="email" type="email" placeholder="faculty@example.com" />
+                </div>
+              </div><br>
+              <div>
+                <label>Expertise</label>
+                <select name="expertise" required>
+                  <option>--Select--</option>
+                  <option>Python</option>
+                  <option>AI</option>
+                  <option>Cloud Computing</option>
+                  <option>Cyber Security</option>
+                </select>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn" type="submit">Submit Faculty</button>
+                <button class="btn secondary" type="reset">Reset</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Student dashboard -->
+        <div id="student" class="tab hidden">
+          <div class="card">
+            <h3>Student Registration</h3>
+            <form id="studentForm">
+              <div class="form-row">
+                <div>
+                  <label>Name</label>
+                  <input name="name" type="text" placeholder="Full name" required />
+                </div>
+                <br>
+                <div>
+                  <label>Student ID</label>
+                  <input name="studentId" type="text" placeholder="e.g., O221043" required />
+                </div>
+              </div>
+              <div class="form-row">
+                <div>
+                  <label>Class / Year</label>
+                  <input name="classYear" type="text" placeholder="B.Tech 1st Year" required />
+                </div><br>
+                <div>
+                  <label>Email</label>
+                  <input name="email" type="email" placeholder="student@example.com" />
+                </div>
+              </div>
+              <br>
+              <div>
+                <label>Expertise</label>
+                <select name="expertise" required>
+                  <option>--Select--</option>
+                  <option>Python</option>
+                  <option>AI</option>
+                  <option>Cloud Computing</option>
+                  <option>Cyber Security</option>
+                </select>
+              </div>
+              <div style="display:flex; gap:8px; margin-top:10px;">
+                <button class="btn" type="submit">Submit Student</button>
+                <button class="btn secondary" type="reset">Reset</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+
+    // Elements references
+    const roleSelectSection = document.getElementById('role-select');
+    const adminLoginSection = document.getElementById('admin-login');
+    const facultyLoginSection = document.getElementById('faculty-login');
+    const studentLoginSection = document.getElementById('student-login');
+    const dashboardsSection = document.getElementById('dashboards');
+    const app = document.getElementById('app');
+
+    const sidebarNav = dashboardsSection.querySelector('.sidebar');
+    const dashMain = dashboardsSection.querySelector('.dash-main');
+
+    // Header buttons
+    const logoutBtn = document.getElementById('logoutBtn');
+    const downloadDataBtn = document.getElementById('downloadDataBtn');
+
+    // Login forms and errors
+    const adminLoginForm = document.getElementById('admin-login-form');
+    const adminMfaForm = document.getElementById('admin-mfa-form');
+    const adminLoginError = document.getElementById('admin-login-error');
+    const adminMfaError = document.getElementById('admin-mfa-error');
+
+    const facultyLoginForm = document.getElementById('faculty-login-form');
+    const facultyMfaForm = document.getElementById('faculty-mfa-form');
+    const facultyLoginError = document.getElementById('faculty-login-error');
+    const facultyMfaError = document.getElementById('faculty-mfa-error');
+
+    const studentLoginForm = document.getElementById('student-login-form');
+    const studentMfaForm = document.getElementById('student-mfa-form');
+    const studentLoginError = document.getElementById('student-login-error');
+    const studentMfaError = document.getElementById('student-mfa-error');
+
+    // Data storage for submitted forms
+    const submittedData = {
+      students: [],
+      faculties: [],
+      courses: [],
+      classrooms: []
+    };
+
+    // Back buttons
+    document.getElementById('admin-back-btn').addEventListener('click', () => {
+      adminLoginSection.classList.add('hidden');
+      roleSelectSection.classList.remove('hidden');
+      resetLoginErrors();
+    });
+    document.getElementById('faculty-back-btn').addEventListener('click', () => {
+      facultyLoginSection.classList.add('hidden');
+      roleSelectSection.classList.remove('hidden');
+      resetLoginErrors();
+    });
+    document.getElementById('student-back-btn').addEventListener('click', () => {
+      studentLoginSection.classList.add('hidden');
+      roleSelectSection.classList.remove('hidden');
+      resetLoginErrors();
+    });
+
+    // Role selection buttons
+    document.getElementById('btn-admin').addEventListener('click', () => {
+      roleSelectSection.classList.add('hidden');
+      adminLoginSection.classList.remove('hidden');
+      app.className = 'admin-bg';
+      resetLoginErrors();
+    });
+    document.getElementById('btn-faculty').addEventListener('click', () => {
+      roleSelectSection.classList.add('hidden');
+      facultyLoginSection.classList.remove('hidden');
+      app.className = 'faculty-bg';
+      resetLoginErrors();
+    });
+    document.getElementById('btn-student').addEventListener('click', () => {
+      roleSelectSection.classList.add('hidden');
+      studentLoginSection.classList.remove('hidden');
+      app.className = 'student-bg';
+      resetLoginErrors();
+    });
+
+    // Reset login error messages and MFA visibility
+    function resetLoginErrors() {
+      adminLoginError.textContent = '';
+      adminMfaError.textContent = '';
+      adminMfaForm.classList.add('hidden');
+      adminLoginForm.classList.remove('hidden');
+
+      facultyLoginError.textContent = '';
+      facultyMfaError.textContent = '';
+      facultyMfaForm.classList.add('hidden');
+      facultyLoginForm.classList.remove('hidden');
+
+      studentLoginError.textContent = '';
+      studentMfaError.textContent = '';
+      studentMfaForm.classList.add('hidden');
+      studentLoginForm.classList.remove('hidden');
+    }
+
+    // Dummy credentials for demo
+    const credentials = {
+      admin: { username: 'admin', password: 'admin123' ,otp: '123456' },
+      faculty: { username: 'faculty1', password: 'facpass1', otp: '654321' },
+      student: { username: 'student1', password: 'studpass1', otp: '112233' }
+    };
+
+    // Admin login form submit handler
+    adminLoginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = adminLoginForm.username.value.trim();
+      const password = adminLoginForm.password.value.trim();
+      if (username === credentials.admin.username && password === credentials.admin.password) {
+        adminLoginForm.classList.add('hidden');
+        adminMfaForm.classList.remove('hidden');
+        adminMfaError.textContent = '';
+      } else {
+        adminLoginError.textContent = 'Invalid username or password';
+      }
+    });
+
+     adminMfaForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const otp = adminMfaForm.querySelector('#admin-otp').value.trim();
+      if (otp === credentials.admin.otp) {
+        showDashboard('admin');
+      } else {
+        adminMfaError.textContent = 'Invalid OTP';
+      }  
+    });
+
+    // Faculty login form submit handler
+    facultyLoginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = facultyLoginForm.username.value.trim();
+      const password = facultyLoginForm.password.value.trim();
+      if (username === credentials.faculty.username && password === credentials.faculty.password) {
+        facultyLoginForm.classList.add('hidden');
+        facultyMfaForm.classList.remove('hidden');
+        facultyMfaError.textContent = '';
+      } else {
+        facultyLoginError.textContent = 'Invalid username or password';
+      }
+    });
+
+    facultyMfaForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const otp = facultyMfaForm.querySelector('#faculty-otp').value.trim();
+      if (otp === credentials.faculty.otp) {
+        showDashboard('faculty');
+      } else {
+        facultyMfaError.textContent = 'Invalid OTP';
+      }
+    });
+
+    // Student login form submit handler
+    studentLoginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const username = studentLoginForm.username.value.trim();
+      const password = studentLoginForm.password.value.trim();
+      if (username === credentials.student.username && password === credentials.student.password) {
+        studentLoginForm.classList.add('hidden');
+        studentMfaForm.classList.remove('hidden');
+        studentMfaError.textContent = '';
+      } else {
+        studentLoginError.textContent = 'Invalid username or password';
+      }
+    });
+
+    studentMfaForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const otp = studentMfaForm.querySelector('#student-otp').value.trim();
+      if (otp === credentials.student.otp) {
+        showDashboard('student');
+      } else {
+        studentMfaError.textContent = 'Invalid OTP';
+      }
+    });
+
+    // Show dashboard based on role
+    function showDashboard(role) {
+      roleSelectSection.classList.add('hidden');
+      adminLoginSection.classList.add('hidden');
+      facultyLoginSection.classList.add('hidden');
+      studentLoginSection.classList.add('hidden');
+      dashboardsSection.classList.remove('hidden');
+      resetLoginErrors();
+      clearForms();
+      setupSidebar(role);
+      setActiveTab(role === 'admin' ? 'classroom' : role);
+      setBackgroundForRole(role);
+    }
+
+    // Set app background for role dashboards
+    function setBackgroundForRole(role) {
+      switch (role) {
+        case 'admin': app.className = 'admin-bg'; break;
+        case 'faculty': app.className = 'faculty-bg'; break;
+        case 'student': app.className = 'student-bg'; break;
+      }
+    }
+
+    // Setup sidebar menu and its click logic
+    function setupSidebar(role) {
+      sidebarNav.innerHTML = '';
+      let links = [];
+      if (role === 'admin') {
+        links = [
+          {id: 'classroom', label: 'Classroom Form'},
+          {id: 'courses', label: 'Courses Form'},
+          {id: 'timetable', label: 'Weekly Timetable'}
+        ];
+      } else if (role === 'faculty') {
+        links = [
+          {id: 'faculty', label: 'Faculty Registration'}
+        ];
+      } else if (role === 'student') {
+        links = [
+          {id: 'student', label: 'Student Registration'}
+        ];
+      }
+      links.forEach(link => {
+        const a = document.createElement('a');
+        a.href = '#';
+        a.textContent = link.label;
+        a.dataset.tabId = link.id;
+        a.tabIndex = 0;
+        a.addEventListener('click', e => {
+          e.preventDefault();
+          setActiveTab(link.id);
+          [...sidebarNav.querySelectorAll('a')].forEach(el => el.classList.remove('active'));
+          a.classList.add('active');
+        });
+        sidebarNav.appendChild(a);
+      });
+      if (sidebarNav.firstChild) {
+        sidebarNav.firstChild.classList.add('active');
+      }
+    }
+
+    // Set a tab as active, show it and hide others
+    function setActiveTab(tabId) {
+      const tabs = dashMain.querySelectorAll('.tab');
+      tabs.forEach(tab => {
+        tab.classList.toggle('hidden', tab.id !== tabId);
+      });
+    }
+
+    // Clear input forms on dashboard form switch/enter
+    function clearForms() {
+      const forms = dashboardsSection.querySelectorAll('form');
+      forms.forEach(f => f.reset());
+    }
+
+    // Save form data when dashboard forms are submitted
+    // Show alert and reset form after submission
+    function handleFormSubmit(form, collectionName) {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const obj = {};
+        formData.forEach((val, key) => { obj[key] = val.trim(); });
+        submittedData[collectionName].push(obj);
+        alert(`Form "${collectionName}" submitted successfully.`);
+        form.reset();
+      });
+    }
+
+    handleFormSubmit(document.getElementById('studentForm'), 'students');
+    handleFormSubmit(document.getElementById('facultyForm'), 'faculties');
+    handleFormSubmit(document.getElementById('coursesForm'), 'courses');
+    handleFormSubmit(document.getElementById('classroomForm'), 'classrooms');
+
+    // Logout button click handler: return to role selection, reset state
+    logoutBtn.addEventListener('click', () => {
+      dashboardsSection.classList.add('hidden');
+      roleSelectSection.classList.remove('hidden');
+      resetLoginErrors();
+      clearForms();
+      // Reset background to default admin-bg or remove all classes
+      app.className = 'admin-bg';
+      // Clear sidebar
+      sidebarNav.innerHTML = '';
+      // Clear submittedData if desired here (optional)
+      // Object.keys(submittedData).forEach(k => submittedData[k] = []);
+    });
+
+    // Download all submitted forms data as JSON
+    downloadDataBtn.addEventListener('click', () => {
+      const jsonStr = JSON.stringify(submittedData, null, 2);
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(jsonStr);
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", "submitted_data.json");
+      dlAnchorElem.click();
+    });
+
+  });
+</script>
+
+</body>
+</html>
